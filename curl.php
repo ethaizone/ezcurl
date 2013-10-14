@@ -22,7 +22,7 @@ class curl {
 	 * @param string $url URL
 	 * @return curl
 	 */
-	public function curl($url)
+	public function __construct($url)
 	{
 		$this->url = $url;
 		$this->url = str_replace(" ", "%20", $this->url );
