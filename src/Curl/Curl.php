@@ -1,4 +1,4 @@
-<?php
+<?php namespace Curl;
 
 /**
  * Easy Curl
@@ -7,7 +7,8 @@
  * @author EThaiZone <ethaizone@hotmail.com>
  * @version 1.1.1
  */
-class curl {
+class Curl
+{
 
 	private $url = "";
 	private $header = array();
@@ -15,6 +16,7 @@ class curl {
 	private $cookie = "";
 	private $info = "";
 	private $auth_basic = "";
+	private $error = null;
 
 	/**
 	 * Init CURL
@@ -33,7 +35,7 @@ class curl {
 		curl_setopt($this->pt, CURLOPT_TIMEOUT, 600);
 		curl_setopt($this->pt, CURLOPT_FRESH_CONNECT, 1);
 		curl_setopt($this->pt, CURLOPT_FORBID_REUSE, 1);
-		curl_setopt($this->pt, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($this->pt, CURLOPT_FOLLOWLOCATION, $this->follow);
 		curl_setopt($this->pt, CURLOPT_HEADER, 1);
 		return $this;
 	}
@@ -138,26 +140,32 @@ class curl {
 	 */
 	public function exec()
 	{
-		curl_setopt($this->pt, CURLOPT_HTTPHEADER, array_merge(array(
+		$header = array_merge(array(
 			"User-Agent: " . (empty($_SERVER['HTTP_USER_AGENT']) ? 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11' : $_SERVER['HTTP_USER_AGENT']),
 			"Accept-Charset: utf-8",
 			'Expect:',	//Override Expect: 100-continue
-		), $this->header));
+		), $this->header)
+		curl_setopt($this->pt, CURLOPT_HTTPHEADER, $header);
 		$result = curl_exec ($this->pt);
 		$this->info = curl_getinfo($this->pt);
 
 
-		if($result === false)
+		if ($result === false)
 		{
-			echo "CURL Error: \n";
-			print_r(curl_error($this->pt));
-			print_r(curl_errno($this->pt));
-			die();
+			$this->error = array(
+				'error' => curl_error($this->pt),
+				'no'    => curl_errno($this->pt)
+			);
 		}
 
 		curl_close ($this->pt);
 
 		@chmod($this->cookie, 0666);
+
+		if ($this->error)
+		{
+			return false;
+		}
 
 		list($res_header, $res_content) = $this->_split_respond($result);
 		$res_content = $this->_decode_body($res_header, $res_content);
@@ -185,13 +193,23 @@ class curl {
 	}
 
 	/**
-	* Get CURl info
-	* Look - http://php.net/manual/en/function.curl-getinfo.php
-	*
-	*/
+	 * Get CURL info
+	 * @link http://php.net/manual/en/function.curl-getinfo.php
+	 * @return array
+	 */
 	public function info()
 	{
 		return $this->info;
+	}
+
+	/**
+	 * Get error
+	 *
+	 * @return array
+	 */
+	public function error()
+	{
+		return $this->error;
 	}
 
 	/**

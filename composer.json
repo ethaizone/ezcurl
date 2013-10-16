@@ -1,0 +1,15 @@
+{
+    "name": "EThaiZone/curl",
+    "description": "Simple CURL wrapper",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nimit Suwannagate",
+            "email": "ethaizone@hotmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+
+    }
+}
